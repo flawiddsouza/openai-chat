@@ -62,3 +62,115 @@ export function showAlert(message, options) {
 
     alertContainer.scrollTop = alertContainer.scrollHeight
 }
+
+export function promptConfirm(message) {
+    return new Promise((resolve, reject) => {
+        const style = document.createElement('style')
+        style.innerHTML = `
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .confirm-box {
+                font-family: Segoe UI, Arial, sans-serif;
+                font-size: 12px;
+                width: 350px;
+                padding: 20px;
+                border: 1px solid #cfcfcf;
+                border-radius: 3px;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+                background-color: #f8f8f8;
+            }
+
+            .confirm-box div {
+                margin-bottom: 10px;
+            }
+
+            .confirm-buttons {
+                text-align: right;
+            }
+
+            .confirm-buttons button {
+                font-family: Segoe UI, Arial, sans-serif;
+                font-size: 12px;
+                padding: 5px 10px;
+                border: 1px solid #cfcfcf;
+                border-radius: 3px;
+                background-color: #f8f8f8;
+                cursor: pointer;
+            }
+
+            .confirm-buttons button:hover {
+                background-color: #ebebeb;
+            }
+
+            .confirm-buttons button:first-child {
+                margin-right: 10px;
+            }
+
+            .confirm-buttons button:focus {
+                outline: none;
+                box-shadow: 0 0 3px 1px rgba(0, 123, 255, 0.5);
+                border-color: #007bff;
+            }
+        `
+        document.head.appendChild(style)
+
+        const overlay = document.createElement('div')
+        overlay.classList.add('overlay')
+
+        const confirmBox = document.createElement('div')
+        confirmBox.classList.add('confirm-box')
+        const confirmText = document.createElement('div')
+        confirmText.innerText = message
+        confirmBox.appendChild(confirmText)
+        const confirmButtons = document.createElement('div')
+        confirmButtons.classList.add('confirm-buttons')
+        const confirmYes = document.createElement('button')
+        confirmYes.innerText = 'OK'
+        const confirmNo = document.createElement('button')
+        confirmNo.innerText = 'Cancel'
+        confirmButtons.appendChild(confirmNo)
+        confirmButtons.appendChild(confirmYes)
+        confirmBox.appendChild(confirmButtons)
+
+        overlay.appendChild(confirmBox)
+        document.body.appendChild(overlay)
+
+        overlay.onclick = (event) => {
+            if (event.target === overlay) {
+                closeModal(false)
+            }
+        }
+
+        const onEscKeyPress = (event) => {
+            if (event.key === 'Escape') {
+                closeModal(false)
+            }
+        }
+        document.addEventListener('keydown', onEscKeyPress)
+
+        function closeModal(result) {
+            document.body.removeChild(overlay);
+            document.head.removeChild(style);
+            document.removeEventListener('keydown', onEscKeyPress)
+            resolve(result)
+        }
+
+        confirmYes.onclick = () => {
+            closeModal(true)
+        }
+        confirmNo.onclick = () => {
+            closeModal(false)
+        }
+    })
+}

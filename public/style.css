@@ -35,6 +35,10 @@ p {
     overflow: auto;
 }
 
+#messages > .user {
+    white-space: pre;
+}
+
 #messages > .assistant {
     background-color: antiquewhite;
     padding: 0.5rem;

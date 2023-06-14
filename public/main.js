@@ -1,6 +1,6 @@
 import { getModels, sendMessage } from './api.js'
 import { marked } from 'https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.0/lib/marked.esm.js'
-import { showAlert } from './helpers.js'
+import { showAlert, promptConfirm } from './helpers.js'
 
 // data
 
@@ -110,7 +110,7 @@ function loadFromLocalStorage() {
             if(message.role === 'system') {
                 return
             }
-            selectors.messages.innerHTML += `<div class="${message.role}">${renderMarkdown(message.content)}</div>`
+            selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
         })
         selectors.messages.scrollTop = selectors.messages.scrollHeight
     }
@@ -148,13 +148,13 @@ selectors.userInput.addEventListener('keydown', (event) => {
     }
 })
 
-selectors.clearChat.addEventListener('click', () => {
+selectors.clearChat.addEventListener('click', async() => {
     if(waitingForResponse) {
         showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
         return
     }
 
-    if(!confirm('Are you sure you want to clear the chat?')) {
+    if(!await promptConfirm('Are you sure you want to clear the chat?')) {
         return
     }
 
@@ -163,18 +163,20 @@ selectors.clearChat.addEventListener('click', () => {
     saveToLocalStorage()
 })
 
-selectors.regenerateResponse.addEventListener('click', () => {
+selectors.regenerateResponse.addEventListener('click', async() => {
     if(waitingForResponse) {
         showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
         return
     }
 
-    if(!confirm('Are you sure you want to regenerate the response?')) {
+    if(!await promptConfirm('Are you sure you want to regenerate the response?')) {
         return
     }
 
-    messages.pop()
-    selectors.messages.removeChild(selectors.messages.lastChild)
+    if(messages[messages.length - 1].role === 'assistant') {
+        messages.pop()
+        selectors.messages.removeChild(selectors.messages.lastChild)
+    }
     sendMessage(activeModel, messages)
     waitingForResponse = true
 })
