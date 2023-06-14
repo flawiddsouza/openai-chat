@@ -1,0 +1,68 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body, #app {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: sans-serif;
+    font-size: 14px;
+}
+
+textarea, select {
+    font: inherit;
+}
+
+p {
+    margin: 0;
+}
+
+#model-selector {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+#models {
+    width: 10rem;
+}
+
+#messages {
+    overflow: auto;
+}
+
+#messages > .assistant {
+    background-color: antiquewhite;
+    padding: 0.5rem;
+}
+
+#messages > div:not(:first-child) {
+    margin-top: 0.5rem;
+}
+
+#messages > div p:not(:first-child) {
+    margin-top: 0.5rem;
+}
+
+#messages, #user-input-container-container {
+    padding: 0 30%;
+}
+
+#user-input-container {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border: 1px solid darkgrey;
+}
+
+#user-input {
+    resize: none;
+    padding: 0.5rem;
+    outline: 0;
+    border: 0;
+}

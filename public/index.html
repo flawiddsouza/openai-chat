@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main id="app">
+        <div style="height: 100%; display: grid; grid-template-rows: auto 1fr auto;">
+            <div id="model-selector">
+                <select id="models"></select>
+            </div>
+            <div id="messages"></div>
+            <div id="user-input-container-container">
+                <div id="user-input-container">
+                    <textarea id="user-input" rows="8" placeholder="Type here..." autofocus></textarea>
+                    <div>
+                        <div>
+                            <button id="send-user-input">></button>
+                        </div>
+                        <div style="margin-top: 0.5rem">
+                            <button id="clear-chat">x</button>
+                        </div>
+                        <div style="margin-top: 0.5rem">
+                            <button id="regenerate-response" style="width: 24px">↻</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="main.js" type="module"></script>
+</body>
+</html>
