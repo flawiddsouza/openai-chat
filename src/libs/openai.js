@@ -36,6 +36,8 @@ export async function getCompletion(model, messages, onMessage, onMessageEnd) {
         }),
         signal: ctrl.signal,
         async onopen(response) {
+            const EventStreamContentType = 'text/event-stream'
+
             if(response.ok && response.headers.get('content-type') === EventStreamContentType) {
                 return // everything's good
             } else if(response.status >= 400 && response.status < 500 && response.status !== 429) {

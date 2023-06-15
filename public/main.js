@@ -12,12 +12,9 @@ let conversations = [
     }
 ]
 
-let messages = [
-    {
-        role: 'system',
-        content: `You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown.`
-    }
-]
+let messages = {
+    default: initMessages()
+}
 
 let activeModel = null
 let activeConversationId = 'default'
@@ -38,6 +35,15 @@ const selectors = {
 }
 
 // methods
+
+function initMessages() {
+    return [
+        {
+            role: 'system',
+            content: `You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown.`
+        }
+    ]
+}
 
 async function loadModels() {
     const models = await getModels()
@@ -62,24 +68,42 @@ function renderMarkdown(markdown) {
     })
 }
 
+function renderMessages() {
+    selectors.messages.innerHTML = ''
+
+    messages[activeConversationId].forEach(message => {
+        if(message.role === 'system') {
+            return
+        }
+        if(message.role === 'user') {
+            selectors.messages.innerHTML += `<div class="user"></div>`
+            selectors.messages.lastChild.textContent = message.content
+        } else {
+            selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
+        }
+    })
+
+    selectors.messages.scrollTop = selectors.messages.scrollHeight
+}
+
 function addMessage(message, type) {
     if(type === 'assistant') {
         if(newMessage) {
-            messages.push({
+            messages[activeConversationId].push({
                 role: 'assistant',
                 content: message
             })
             selectors.messages.innerHTML += `<div class="assistant">${renderMarkdown(message)}</div>`
         } else {
-            messages[messages.length - 1].content += message
-            selectors.messages.lastChild.innerHTML = renderMarkdown(messages[messages.length - 1].content)
+            messages[activeConversationId][messages[activeConversationId].length - 1].content += message
+            selectors.messages.lastChild.innerHTML = renderMarkdown(messages[activeConversationId][messages[activeConversationId].length - 1].content)
         }
     }
 
     if(type === 'user') {
         selectors.messages.innerHTML += `<div class="user"></div>`
         selectors.messages.lastChild.textContent = message
-        messages.push({
+        messages[activeConversationId].push({
             role: 'user',
             content: message
         })
@@ -87,7 +111,7 @@ function addMessage(message, type) {
 
     if(type === 'error') {
         selectors.messages.innerHTML += `<div class="error">${message}</div>`
-        messages.push({
+        messages[activeConversationId].push({
             role: 'error',
             content: message
         })
@@ -99,7 +123,7 @@ function addMessage(message, type) {
 }
 
 function sendMessageWrapper() {
-    return sendMessage(activeModel, messages.filter(message => message.role !== 'error'))
+    return sendMessage(activeModel, messages[activeConversationId].filter(message => message.role !== 'error'))
 }
 
 function handleSendMessage() {
@@ -134,18 +158,7 @@ function loadFromLocalStorage() {
         activeConversationId = data.activeConversationId
         activeModel = data.activeModel
         messages = data.messages
-        messages.forEach(message => {
-            if(message.role === 'system') {
-                return
-            }
-            if(message.role === 'user') {
-                selectors.messages.innerHTML += `<div class="user"></div>`
-                selectors.messages.lastChild.textContent = message.content
-            } else {
-                selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
-            }
-        })
-        selectors.messages.scrollTop = selectors.messages.scrollHeight
+        renderMessages()
     }
 }
 
@@ -172,6 +185,8 @@ function addConversation(name) {
         id,
         name
     })
+
+    messages[id] = initMessages()
 
     setActiveConversation(id)
 
@@ -205,6 +220,7 @@ function deleteConversation(id) {
 function setActiveConversation(id) {
     activeConversationId = id
     renderConversations()
+    renderMessages()
 }
 
 // event handlers
@@ -285,7 +301,7 @@ selectors.clearChat.addEventListener('click', async() => {
         return
     }
 
-    messages = []
+    messages[activeConversationId] = initMessages()
     selectors.messages.innerHTML = ''
     saveToLocalStorage()
 })
@@ -300,8 +316,8 @@ selectors.regenerateResponse.addEventListener('click', async() => {
         return
     }
 
-    if(messages[messages.length - 1].role === 'assistant' || messages[messages.length - 1].role === 'error') {
-        messages.pop()
+    if(messages[activeConversationId][messages[activeConversationId].length - 1].role === 'assistant' || messages[activeConversationId][messages[activeConversationId].length - 1].role === 'error') {
+        messages[activeConversationId].pop()
         selectors.messages.removeChild(selectors.messages.lastChild)
         saveToLocalStorage()
     }
