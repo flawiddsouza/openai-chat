@@ -66,7 +66,8 @@ function addMessage(message, type) {
     }
 
     if(type === 'user') {
-        selectors.messages.innerHTML += `<div class="user">${message}</div>`
+        selectors.messages.innerHTML += `<div class="user"></div>`
+        selectors.messages.lastChild.textContent = message
         messages.push({
             role: 'user',
             content: message
@@ -110,7 +111,12 @@ function loadFromLocalStorage() {
             if(message.role === 'system') {
                 return
             }
-            selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
+            if(message.role === 'user') {
+                selectors.messages.innerHTML += `<div class="user"></div>`
+                selectors.messages.lastChild.textContent = message.content
+            } else {
+                selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
+            }
         })
         selectors.messages.scrollTop = selectors.messages.scrollHeight
     }
