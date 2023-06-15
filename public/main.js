@@ -137,6 +137,12 @@ function handleSendMessage() {
     }
 
     addMessage(selectors.userInput.value, 'user')
+    if(messages[activeConversationId].filter(item => item.role === 'assistant').length === 0) {
+        const activeConversation = getConversation(activeConversationId)
+        if(activeConversation.name === 'New Conversation') {
+            renameConversation(activeConversationId, selectors.userInput.value.slice(0, 30))
+        }
+    }
     sendMessageWrapper()
     waitingForResponse = true
     selectors.userInput.value = ''
@@ -247,10 +253,7 @@ es.addEventListener('error', (event) => {
 })
 
 selectors.addConversation.addEventListener('click', () => {
-    const name = prompt('Enter a name for the conversation:')
-    if(name) {
-        addConversation(name)
-    }
+    addConversation('New Conversation')
 })
 
 selectors.conversations.addEventListener('click', async(event) => {
