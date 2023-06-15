@@ -172,5 +172,31 @@ export function promptConfirm(message) {
         confirmNo.onclick = () => {
             closeModal(false)
         }
+
+        // Add event listeners to lock focus inside the modal buttons
+        const buttons = [confirmYes, confirmNo]
+        buttons.forEach((button, index, arr) => {
+            button.addEventListener('keydown', (event) => {
+                if (event.key === 'Tab') {
+                    event.preventDefault()
+                    const nextIndex = (index + 1) % arr.length
+                    arr[nextIndex].focus()
+                }
+            })
+        })
+        confirmNo.addEventListener('keydown', (event) => {
+            if (event.key === 'Tab' && !event.shiftKey) {
+                event.preventDefault()
+                confirmYes.focus()
+            }
+        })
+        confirmYes.addEventListener('keydown', (event) => {
+            if (event.key === 'Tab' && event.shiftKey) {
+                event.preventDefault()
+                confirmNo.focus()
+            }
+        })
+
+        confirmYes.focus()
     })
 }
