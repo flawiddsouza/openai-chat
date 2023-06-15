@@ -182,6 +182,7 @@ selectors.regenerateResponse.addEventListener('click', async() => {
     if(messages[messages.length - 1].role === 'assistant') {
         messages.pop()
         selectors.messages.removeChild(selectors.messages.lastChild)
+        saveToLocalStorage()
     }
     sendMessage(activeModel, messages)
     waitingForResponse = true
