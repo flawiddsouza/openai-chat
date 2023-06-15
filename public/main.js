@@ -87,6 +87,10 @@ function addMessage(message, type) {
     saveToLocalStorage()
 }
 
+function sendMessageWrapper() {
+    return sendMessage(activeModel, messages.filter(message => message.role !== 'error'))
+}
+
 function handleSendMessage() {
     if(waitingForResponse) {
         showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
@@ -98,7 +102,7 @@ function handleSendMessage() {
     }
 
     addMessage(selectors.userInput.value, 'user')
-    sendMessage(activeModel, messages.filter(message => message.role !== 'error'))
+    sendMessageWrapper()
     waitingForResponse = true
     selectors.userInput.value = ''
 }
@@ -197,7 +201,7 @@ selectors.regenerateResponse.addEventListener('click', async() => {
         saveToLocalStorage()
     }
 
-    sendMessage(activeModel, messages)
+    sendMessageWrapper()
     waitingForResponse = true
 })
 
