@@ -209,7 +209,7 @@ function deleteConversation(id) {
     }
 
     if(activeConversationId === id) {
-        setActiveConversation(conversations[0].id)
+        setActiveConversation(conversations[index] ? conversations[index].id : conversations[index - 1].id)
     } else {
         renderConversations()
     }
