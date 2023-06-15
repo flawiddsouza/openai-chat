@@ -34,18 +34,19 @@ router.get('/sse', (req, res) => {
 })
 
 router.post('/message', async(req, res) => {
-    const { model, messages } = req.body
+    const { conversationId, model, messages } = req.body
 
     getCompletion(
         model,
         messages,
         data => {
             req.app.emit('message', {
+                conversationId,
                 message: data
             })
         },
         data => {
-            req.app.emit('message-end', data)
+            req.app.emit('message-end', { conversationId, ...data })
         }
     ).then(() => {})
 

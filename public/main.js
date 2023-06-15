@@ -86,32 +86,38 @@ function renderMessages() {
     selectors.messages.scrollTop = selectors.messages.scrollHeight
 }
 
-function addMessage(message, type) {
+function addMessage(conversationId, message, type) {
     if(type === 'assistant') {
         if(newMessage) {
-            messages[activeConversationId].push({
+            messages[conversationId].push({
                 role: 'assistant',
                 content: message
             })
-            selectors.messages.innerHTML += `<div class="assistant">${renderMarkdown(message)}</div>`
+            if(conversationId === activeConversationId) {
+                selectors.messages.innerHTML += `<div class="assistant">${renderMarkdown(message)}</div>`
+            }
         } else {
-            messages[activeConversationId][messages[activeConversationId].length - 1].content += message
-            selectors.messages.lastChild.innerHTML = renderMarkdown(messages[activeConversationId][messages[activeConversationId].length - 1].content)
+            messages[conversationId][messages[conversationId].length - 1].content += message
+            if(conversationId === activeConversationId) {
+                selectors.messages.lastChild.innerHTML = renderMarkdown(messages[conversationId][messages[conversationId].length - 1].content)
+            }
         }
     }
 
     if(type === 'user') {
         selectors.messages.innerHTML += `<div class="user"></div>`
         selectors.messages.lastChild.textContent = message
-        messages[activeConversationId].push({
+        messages[conversationId].push({
             role: 'user',
             content: message
         })
     }
 
     if(type === 'error') {
-        selectors.messages.innerHTML += `<div class="error">${message}</div>`
-        messages[activeConversationId].push({
+        if(conversationId === activeConversationId) {
+            selectors.messages.innerHTML += `<div class="error">${message}</div>`
+        }
+        messages[conversationId].push({
             role: 'error',
             content: message
         })
@@ -123,7 +129,7 @@ function addMessage(message, type) {
 }
 
 function sendMessageWrapper() {
-    return sendMessage(activeModel, messages[activeConversationId].filter(message => message.role !== 'error'))
+    return sendMessage(activeConversationId, activeModel, messages[activeConversationId].filter(message => message.role !== 'error'))
 }
 
 function handleSendMessage() {
@@ -136,7 +142,7 @@ function handleSendMessage() {
         return
     }
 
-    addMessage(selectors.userInput.value, 'user')
+    addMessage(activeConversationId, selectors.userInput.value, 'user')
     if(messages[activeConversationId].filter(item => item.role === 'assistant').length === 0) {
         const activeConversation = getConversation(activeConversationId)
         if(activeConversation.name === 'New Conversation') {
@@ -239,14 +245,14 @@ const es = new EventSource('/sse')
 
 es.addEventListener('message', (event) => {
     const payload = JSON.parse(event.data)
-    addMessage(payload.message, 'assistant')
+    addMessage(payload.conversationId, payload.message, 'assistant')
     newMessage = false
 })
 
 es.addEventListener('message-end', (event) => {
     const payload = JSON.parse(event.data)
     if(payload.error) {
-        addMessage(payload.error, 'error')
+        addMessage(payload.conversationId, payload.error, 'error')
     }
     newMessage = true
     waitingForResponse = false

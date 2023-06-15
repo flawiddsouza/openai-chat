@@ -3,13 +3,13 @@ export async function getModels() {
     return response.json()
 }
 
-export async function sendMessage(model, messages) {
+export async function sendMessage(conversationId, model, messages) {
     const response = await fetch('/message', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ model, messages }),
+        body: JSON.stringify({ conversationId, model, messages }),
     })
     return response.json()
 }
