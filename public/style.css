@@ -44,6 +44,12 @@ p {
     padding: 0.5rem;
 }
 
+#messages > .error {
+    background-color: #ff4f4f;
+    color: white;
+    padding: 0.5rem;
+}
+
 #messages > div:not(:first-child) {
     margin-top: 0.5rem;
 }

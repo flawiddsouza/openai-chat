@@ -14,6 +14,9 @@ export async function getModels() {
     return models
 }
 
+class RetriableError extends Error {}
+class FatalError extends Error {}
+
 export async function getCompletion(model, messages, onMessage, onMessageEnd) {
     const ctrl = new AbortController()
 
@@ -32,6 +35,27 @@ export async function getCompletion(model, messages, onMessage, onMessageEnd) {
             stream: true,
         }),
         signal: ctrl.signal,
+        async onopen(response) {
+            if(response.ok && response.headers.get('content-type') === EventStreamContentType) {
+                return // everything's good
+            } else if(response.status >= 400 && response.status < 500 && response.status !== 429) {
+                let errorMessage = 'Unknown error'
+
+                if(response.headers.get('content-type') === 'application/json') {
+                    const responseBody = await response.json()
+                    errorMessage = responseBody.error.message
+                } else {
+                    errorMessage = await response.text()
+                }
+
+                ctrl.abort()
+                onMessageEnd({ error: errorMessage })
+
+                throw new FatalError()
+            } else {
+                throw new RetriableError()
+            }
+        },
         onmessage(msg) {
             const parsedMsg = JSON.parse(msg.data)
             parsedMsg.choices.forEach(choice => {
@@ -41,14 +65,10 @@ export async function getCompletion(model, messages, onMessage, onMessageEnd) {
 
                 if(choice.finish_reason !== null) {
                     ctrl.abort()
-                    onMessageEnd()
+                    onMessageEnd({ success: 'Chat completed' })
                     return
                 }
             })
-        },
-        onerror(err) {
-            console.log(err)
-            ctrl.abort()
         }
     })
 }

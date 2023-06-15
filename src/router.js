@@ -36,16 +36,18 @@ router.get('/sse', (req, res) => {
 router.post('/message', async(req, res) => {
     const { model, messages } = req.body
 
-    getCompletion(model, messages, data => {
-        req.app.emit('message', {
-            message: data
-        })
-    },
-    () => {
-        req.app.emit('message-end', {
-            message: 'Chat ended'
-        })
-    }).then(() => {})
+    getCompletion(
+        model,
+        messages,
+        data => {
+            req.app.emit('message', {
+                message: data
+            })
+        },
+        data => {
+            req.app.emit('message-end', data)
+        }
+    ).then(() => {})
 
     res.send({ message: 'Completion initiated' })
 })

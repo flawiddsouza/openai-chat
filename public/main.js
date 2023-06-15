@@ -74,6 +74,14 @@ function addMessage(message, type) {
         })
     }
 
+    if(type === 'error') {
+        selectors.messages.innerHTML += `<div class="error">${message}</div>`
+        messages.push({
+            role: 'error',
+            content: message
+        })
+    }
+
     selectors.messages.scrollTop = selectors.messages.scrollHeight
 
     saveToLocalStorage()
@@ -90,7 +98,7 @@ function handleSendMessage() {
     }
 
     addMessage(selectors.userInput.value, 'user')
-    sendMessage(activeModel, messages)
+    sendMessage(activeModel, messages.filter(message => message.role !== 'error'))
     waitingForResponse = true
     selectors.userInput.value = ''
 }
@@ -132,7 +140,11 @@ es.addEventListener('message', (event) => {
     newMessage = false
 })
 
-es.addEventListener('message-end', () => {
+es.addEventListener('message-end', (event) => {
+    const payload = JSON.parse(event.data)
+    if(payload.error) {
+        addMessage(payload.error, 'error')
+    }
     newMessage = true
     waitingForResponse = false
 })
@@ -179,11 +191,12 @@ selectors.regenerateResponse.addEventListener('click', async() => {
         return
     }
 
-    if(messages[messages.length - 1].role === 'assistant') {
+    if(messages[messages.length - 1].role === 'assistant' || messages[messages.length - 1].role === 'error') {
         messages.pop()
         selectors.messages.removeChild(selectors.messages.lastChild)
         saveToLocalStorage()
     }
+
     sendMessage(activeModel, messages)
     waitingForResponse = true
 })
