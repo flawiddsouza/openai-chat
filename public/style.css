@@ -86,13 +86,21 @@ p {
 }
 
 #messages > .assistant {
-    background-color: antiquewhite;
+    background-color: #b5e2ff;
     padding: 0.5rem;
 }
 
+#messages > .assistant pre > code {
+    width: 100%;
+    display: inline-block;
+    overflow-x: auto;
+    border: 1px solid darkgrey;
+    padding: 0.5rem;
+    background-color: white;
+}
+
 #messages > .error {
-    background-color: #ff4f4f;
-    color: white;
+    background-color: #ffb5b5;
     padding: 0.5rem;
 }
 
