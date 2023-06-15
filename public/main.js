@@ -1,7 +1,17 @@
 import { getModels, sendMessage } from './api.js'
-import { marked } from 'https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.0/lib/marked.esm.js'
+import { marked } from './libs/marked.esm.js'
+import { markedHighlight } from './libs/marked-highlight@2.0.1.js'
+import hljs from './libs/highlight.js@11.8.0/highlight.min.js'
 import { showAlert, promptConfirm } from './helpers.js'
 import { nanoid } from './libs/nanoid.js'
+
+marked.use(markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+        return hljs.highlight(code, { language }).value
+    }
+}))
 
 // data
 
