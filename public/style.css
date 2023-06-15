@@ -58,12 +58,18 @@ p {
     background-color: #b5e2ff;
 }
 
+#sidebar > #conversations > div > div:first-child {
+    width: 72%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 #sidebar > #conversations button {
     border: none;
     background-color: transparent;
     cursor: pointer;
     font-size: 1rem;
-    margin-left: 0.5rem;
 }
 
 #model-selector {

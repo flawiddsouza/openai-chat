@@ -173,8 +173,12 @@ function renderConversations() {
         return `<div class="conversation ${conversation.id === activeConversationId ? 'active' : ''}" data-id="${conversation.id}">
             <div>${conversation.name}</div>
             <div>
-                <button class="rename-conversation">e</button>
-                <button class="delete-conversation">x</button>
+                <button class="rename-conversation">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-pencil"><path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4"></path><path d="M13.5 6.5l4 4"></path></svg>
+                </button>
+                <button class="delete-conversation">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-trash"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>
+                </button>
             </div>
         </div>`
     }).join('')
@@ -257,27 +261,32 @@ selectors.addConversation.addEventListener('click', () => {
 })
 
 selectors.conversations.addEventListener('click', async(event) => {
-    if(event.target.classList.contains('rename-conversation')) {
-        const id = event.target.closest('[data-id]').dataset.id
+    let element
+
+    if(element = event.target.closest('.rename-conversation')) {
+        const id = element.closest('[data-id]').dataset.id
         const conversation = getConversation(id)
         const name = prompt('Enter a new name for the conversation:', conversation.name)
         if(name) {
             renameConversation(id, name)
         }
+        return
     }
 
-    if(event.target.classList.contains('delete-conversation')) {
-        const id = event.target.closest('[data-id]').dataset.id
+    if(element = event.target.closest('.delete-conversation')) {
+        const id = element.closest('[data-id]').dataset.id
         if(!await promptConfirm('Are you sure you want to delete this conversation?')) {
             return
         }
         deleteConversation(id)
+        return
     }
 
-    if(event.target.classList.contains('conversation')) {
-        const id = event.target.dataset.id
+    if(element = event.target.closest('.conversation')) {
+        const id = element.dataset.id
         setActiveConversation(id)
         saveToLocalStorage()
+        return
     }
 })
 
