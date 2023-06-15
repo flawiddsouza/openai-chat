@@ -1,8 +1,16 @@
 import { getModels, sendMessage } from './api.js'
 import { marked } from 'https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.0/lib/marked.esm.js'
 import { showAlert, promptConfirm } from './helpers.js'
+import { nanoid } from './libs/nanoid.js'
 
 // data
+
+let conversations = [
+    {
+        id: 'default',
+        name: 'Conversation 1'
+    }
+]
 
 let messages = [
     {
@@ -11,13 +19,16 @@ let messages = [
     }
 ]
 
+let activeModel = null
+let activeConversationId = 'default'
 let newMessage = true
 let waitingForResponse = false
-let activeModel = null
 
 // selectors
 
 const selectors = {
+    addConversation: document.querySelector('#add-conversation'),
+    conversations: document.querySelector('#conversations'),
     models: document.querySelector('#models'),
     messages: document.querySelector('#messages'),
     userInput: document.querySelector('#user-input'),
@@ -109,6 +120,8 @@ function handleSendMessage() {
 
 function saveToLocalStorage() {
     localStorage.setItem('openai-chat', JSON.stringify({
+        conversations,
+        activeConversationId,
         activeModel,
         messages
     }))
@@ -117,6 +130,8 @@ function saveToLocalStorage() {
 function loadFromLocalStorage() {
     const data = JSON.parse(localStorage.getItem('openai-chat'))
     if(data) {
+        conversations = data.conversations
+        activeConversationId = data.activeConversationId
         activeModel = data.activeModel
         messages = data.messages
         messages.forEach(message => {
@@ -132,6 +147,64 @@ function loadFromLocalStorage() {
         })
         selectors.messages.scrollTop = selectors.messages.scrollHeight
     }
+}
+
+function renderConversations() {
+    selectors.conversations.innerHTML = conversations.slice().reverse().map(conversation => {
+        return `<div class="conversation ${conversation.id === activeConversationId ? 'active' : ''}" data-id="${conversation.id}">
+            <div>${conversation.name}</div>
+            <div>
+                <button class="rename-conversation">e</button>
+                <button class="delete-conversation">x</button>
+            </div>
+        </div>`
+    }).join('')
+}
+
+function getConversation(id) {
+    return conversations.find(conversation => conversation.id === id)
+}
+
+function addConversation(name) {
+    const id = nanoid()
+
+    conversations.push({
+        id,
+        name
+    })
+
+    setActiveConversation(id)
+
+    saveToLocalStorage()
+}
+
+function renameConversation(id, name) {
+    const conversation = getConversation(id)
+    conversation.name = name
+    saveToLocalStorage()
+    renderConversations()
+}
+
+function deleteConversation(id) {
+    const index = conversations.findIndex(conversation => conversation.id === id)
+    conversations.splice(index, 1)
+
+    if(conversations.length === 0) {
+        addConversation('Conversation 1')
+    }
+
+    if(activeConversationId === id) {
+        setActiveConversation(conversations[0].id)
+    } else {
+        renderConversations()
+    }
+
+    saveToLocalStorage()
+}
+
+function setActiveConversation(id) {
+    activeConversationId = id
+    renderConversations()
 }
 
 // event handlers
@@ -155,6 +228,38 @@ es.addEventListener('message-end', (event) => {
 
 es.addEventListener('error', (event) => {
     console.error(event)
+})
+
+selectors.addConversation.addEventListener('click', () => {
+    const name = prompt('Enter a name for the conversation:')
+    if(name) {
+        addConversation(name)
+    }
+})
+
+selectors.conversations.addEventListener('click', async(event) => {
+    if(event.target.classList.contains('rename-conversation')) {
+        const id = event.target.closest('[data-id]').dataset.id
+        const conversation = getConversation(id)
+        const name = prompt('Enter a new name for the conversation:', conversation.name)
+        if(name) {
+            renameConversation(id, name)
+        }
+    }
+
+    if(event.target.classList.contains('delete-conversation')) {
+        const id = event.target.closest('[data-id]').dataset.id
+        if(!await promptConfirm('Are you sure you want to delete this conversation?')) {
+            return
+        }
+        deleteConversation(id)
+    }
+
+    if(event.target.classList.contains('conversation')) {
+        const id = event.target.dataset.id
+        setActiveConversation(id)
+        saveToLocalStorage()
+    }
 })
 
 selectors.models.addEventListener('change', () => {
@@ -209,5 +314,6 @@ selectors.regenerateResponse.addEventListener('click', async() => {
 
 loadFromLocalStorage()
 loadModels()
+renderConversations()
 
 window.showAlert = showAlert
