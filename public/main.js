@@ -230,6 +230,8 @@ function deleteConversation(id) {
     const index = conversations.findIndex(conversation => conversation.id === id)
     conversations.splice(index, 1)
 
+    delete messages[id]
+
     if(conversations.length === 0) {
         addConversation('Conversation 1')
     }
