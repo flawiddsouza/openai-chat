@@ -28,8 +28,8 @@ let messages = {
 
 let activeModel = null
 let activeConversationId = 'default'
-let newMessage = true
-let waitingForResponse = false
+const newMessage = {}
+const waitingForResponse = {}
 
 // selectors
 
@@ -79,6 +79,14 @@ function renderMarkdown(markdown) {
 }
 
 function renderMessages() {
+    if(activeConversationId in newMessage === false) {
+        newMessage[activeConversationId] = true
+    }
+
+    if(activeConversationId in waitingForResponse == false) {
+        waitingForResponse[activeConversationId] = false
+    }
+
     selectors.messages.innerHTML = ''
 
     messages[activeConversationId].forEach(message => {
@@ -98,7 +106,7 @@ function renderMessages() {
 
 function addMessage(conversationId, message, type) {
     if(type === 'assistant') {
-        if(newMessage) {
+        if(newMessage[conversationId]) {
             messages[conversationId].push({
                 role: 'assistant',
                 content: message
@@ -143,7 +151,7 @@ function sendMessageWrapper() {
 }
 
 function handleSendMessage() {
-    if(waitingForResponse) {
+    if(waitingForResponse[activeConversationId]) {
         showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
         return
     }
@@ -160,7 +168,7 @@ function handleSendMessage() {
         }
     }
     sendMessageWrapper()
-    waitingForResponse = true
+    waitingForResponse[activeConversationId] = true
     selectors.userInput.value = ''
 }
 
@@ -258,7 +266,7 @@ const es = new EventSource('/sse')
 es.addEventListener('message', (event) => {
     const payload = JSON.parse(event.data)
     addMessage(payload.conversationId, payload.message, 'assistant')
-    newMessage = false
+    newMessage[payload.conversationId] = false
 })
 
 es.addEventListener('message-end', (event) => {
@@ -266,8 +274,8 @@ es.addEventListener('message-end', (event) => {
     if(payload.error) {
         addMessage(payload.conversationId, payload.error, 'error')
     }
-    newMessage = true
-    waitingForResponse = false
+    newMessage[payload.conversationId] = true
+    waitingForResponse[payload.conversationId] = false
 })
 
 es.addEventListener('error', (event) => {
@@ -322,7 +330,7 @@ selectors.userInput.addEventListener('keydown', (event) => {
 })
 
 selectors.clearChat.addEventListener('click', async() => {
-    if(waitingForResponse) {
+    if(waitingForResponse[activeConversationId]) {
         showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
         return
     }
@@ -337,7 +345,7 @@ selectors.clearChat.addEventListener('click', async() => {
 })
 
 selectors.regenerateResponse.addEventListener('click', async() => {
-    if(waitingForResponse) {
+    if(waitingForResponse[activeConversationId]) {
         showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
         return
     }
@@ -353,7 +361,7 @@ selectors.regenerateResponse.addEventListener('click', async() => {
     }
 
     sendMessageWrapper()
-    waitingForResponse = true
+    waitingForResponse[activeConversationId] = true
 })
 
 // init
