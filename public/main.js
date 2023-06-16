@@ -233,7 +233,7 @@ function deleteConversation(id) {
     delete messages[id]
 
     if(conversations.length === 0) {
-        addConversation('Conversation 1')
+        addConversation('New Conversation')
     }
 
     if(activeConversationId === id) {
