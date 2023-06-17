@@ -8,7 +8,17 @@
     <link href="libs/highlight.js@11.8.0/styles/github.min.css" rel="stylesheet">
 </head>
 <body>
-    <main id="app" style="display: grid; grid-template-columns: auto 1fr;">
+    <div id="top-bar">
+        <button id="hamburger-menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-menu">
+                <path d="M4 6l16 0"></path>
+                <path d="M4 12l16 0"></path>
+                <path d="M4 18l16 0"></path>
+            </svg>
+        </button>
+    </div>
+    <div id="sidebar-overlay"></div>
+    <main id="app">
         <div id="sidebar">
             <button id="add-conversation">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-plus"><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>

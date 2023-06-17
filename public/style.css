@@ -20,10 +20,9 @@ p {
     margin: 0;
 }
 
-#main-container {
+#app {
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    overflow: auto;
+    grid-template-columns: auto 1fr;
 }
 
 #sidebar {
@@ -70,6 +69,12 @@ p {
     background-color: transparent;
     cursor: pointer;
     font-size: 1rem;
+}
+
+#main-container {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: auto;
 }
 
 #model-selector {
@@ -156,4 +161,67 @@ p {
     padding: 0.5rem;
     outline: 0;
     border: 0;
+}
+
+#top-bar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #b5e2ff;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    z-index: 3;
+}
+
+/* Mobile devices */
+@media (max-width: 768px) {
+    #top-bar {
+        display: flex;
+    }
+
+    #sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+
+    #sidebar {
+        position: fixed;
+        left: -250px;
+        top: 50px; /* Adjust the top position to account for the top bar */
+        height: calc(100% - 50px); /* Adjust the height to account for the top bar */
+        transition: left 0.3s;
+        z-index: 2;
+        box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #sidebar.open {
+        left: 0;
+    }
+
+    #sidebar-overlay.open {
+        display: block;
+    }
+
+    #app {
+        grid-template-columns: 1fr;
+        padding-top: 50px; /* Add padding to account for the top bar */
+    }
+
+    #messages, #user-input-container-container {
+        padding: 0 10%;
+    }
+
+    #messages {
+        padding-bottom: 2.5rem;
+    }
 }

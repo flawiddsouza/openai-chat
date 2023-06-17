@@ -34,6 +34,9 @@ const waitingForResponse = {}
 // selectors
 
 const selectors = {
+    hamburgerMenu: document.querySelector('#hamburger-menu'),
+    sidebar: document.querySelector('#sidebar'),
+    sidebarOverlay: document.querySelector('#sidebar-overlay'),
     addConversation: document.querySelector('#add-conversation'),
     conversations: document.querySelector('#conversations'),
     models: document.querySelector('#models'),
@@ -54,6 +57,11 @@ function initMessages() {
             content: `You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown.`
         }
     ]
+}
+
+function toggleSidebar() {
+    selectors.sidebar.classList.toggle('open')
+    selectors.sidebarOverlay.classList.toggle('open')
 }
 
 async function loadModels() {
@@ -283,6 +291,16 @@ es.addEventListener('error', (event) => {
     console.error(event)
 })
 
+selectors.hamburgerMenu.addEventListener('click', () => {
+    toggleSidebar()
+})
+
+document.addEventListener('click', (event) => {
+    if (!selectors.sidebar.contains(event.target) && !selectors.hamburgerMenu.contains(event.target) && selectors.sidebar.classList.contains('open')) {
+        toggleSidebar()
+    }
+})
+
 selectors.addConversation.addEventListener('click', () => {
     addConversation('New Conversation')
 })
@@ -382,5 +400,3 @@ setInterval(() => {
 loadFromLocalStorage()
 loadModels()
 renderConversations()
-
-window.showAlert = showAlert
