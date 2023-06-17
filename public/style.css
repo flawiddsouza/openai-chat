@@ -101,6 +101,30 @@ p {
     padding: 0.5rem;
 }
 
+#messages > .assistant .code-block {
+    margin-top: 0.5rem;
+}
+
+#messages > .assistant .code-block > .code-block-header {
+    background-color: #ffb5b5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-left: 1px solid darkgrey;
+    border-right: 1px solid darkgrey;
+    border-top: 1px solid darkgrey;
+}
+
+#messages > .assistant .code-block > .code-block-header > button {
+    display: flex;
+    align-items: center;
+}
+
+#messages > .assistant pre {
+    margin: 0;
+}
+
 #messages > .assistant pre > code {
     width: 100%;
     display: inline-block;

@@ -1,17 +1,8 @@
 import { getModels, sendMessage, stopGenerating } from './api.js'
 import { marked } from './libs/marked.esm.js'
-import { markedHighlight } from './libs/marked-highlight@2.0.1.js'
 import hljs from './libs/highlight.js@11.8.0/highlight.min.js'
 import { showAlert, promptConfirm } from './helpers.js'
 import { nanoid } from './libs/nanoid.js'
-
-marked.use(markedHighlight({
-    langPrefix: 'hljs language-',
-    highlight(code, lang) {
-        const language = hljs.getLanguage(lang) ? lang : 'plaintext'
-        return hljs.highlight(code, { language }).value
-    }
-}))
 
 // data
 
@@ -80,10 +71,32 @@ function setModel(index) {
     saveToLocalStorage()
 }
 
+class CustomRenderer extends marked.Renderer {
+    code(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+        const highlightedCode = hljs.highlight(code, { language }).value
+        return `
+            <div class="code-block">
+                <div class="code-block-header">
+                    <div>${language ?? 'Plain Text'}</div>
+                    <button class="copy-code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-clipboard"><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"></path><path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z"></path></svg>
+                        Copy Code
+                    </button>
+                </div>
+                <pre><code>${highlightedCode}</code></pre>
+            </div>
+        `
+    }
+}
+
+const customRenderer = new CustomRenderer();
+
 function renderMarkdown(markdown) {
     return marked(markdown, {
         headerIds: false,
         mangle: false,
+        renderer: customRenderer
     })
 }
 
@@ -385,6 +398,14 @@ selectors.clearChat.addEventListener('click', async() => {
     messages[activeConversationId] = initMessages()
     selectors.messages.innerHTML = ''
     saveToLocalStorage()
+})
+
+document.addEventListener('click', (event) => {
+    if(event.target.closest('.copy-code')) {
+        const code = event.target.closest('.copy-code').parentElement.nextElementSibling.textContent
+        navigator.clipboard.writeText(code)
+        showAlert('Code copied to clipboard', { backgroundColor: '#28a745' })
+    }
 })
 
 setInterval(() => {
