@@ -21,6 +21,14 @@
                 <select id="models"></select>
             </div>
             <div id="messages"></div>
+            <div id="action-buttons">
+                <button id="stop-generating">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-player-stop"><path d="M5 5m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z"></path>
+                    </svg>
+                    Stop Generating
+                </button>
+                <button id="regenerate-response">↻ Regenerate last response</button>
+            </div>
             <div id="user-input-container-container">
                 <div id="user-input-container">
                     <textarea id="user-input" rows="8" placeholder="Type here..." autofocus></textarea>
@@ -30,9 +38,6 @@
                         </div>
                         <div style="margin-top: 0.5rem">
                             <button id="clear-chat">x</button>
-                        </div>
-                        <div style="margin-top: 0.5rem">
-                            <button id="regenerate-response" style="width: 24px">↻</button>
                         </div>
                     </div>
                 </div>

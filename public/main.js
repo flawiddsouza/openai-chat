@@ -1,4 +1,4 @@
-import { getModels, sendMessage } from './api.js'
+import { getModels, sendMessage, stopGenerating } from './api.js'
 import { marked } from './libs/marked.esm.js'
 import { markedHighlight } from './libs/marked-highlight@2.0.1.js'
 import hljs from './libs/highlight.js@11.8.0/highlight.min.js'
@@ -38,10 +38,11 @@ const selectors = {
     conversations: document.querySelector('#conversations'),
     models: document.querySelector('#models'),
     messages: document.querySelector('#messages'),
+    stopGenerating: document.querySelector('#stop-generating'),
+    regenerateResponse: document.querySelector('#regenerate-response'),
     userInput: document.querySelector('#user-input'),
     sendUserInput: document.querySelector('#send-user-input'),
     clearChat: document.querySelector('#clear-chat'),
-    regenerateResponse: document.querySelector('#regenerate-response'),
 }
 
 // methods
@@ -147,7 +148,8 @@ function addMessage(conversationId, message, type) {
 }
 
 function sendMessageWrapper() {
-    return sendMessage(activeConversationId, activeModel, messages[activeConversationId].filter(message => message.role !== 'error'))
+    sendMessage(activeConversationId, activeModel, messages[activeConversationId].filter(message => message.role !== 'error'))
+    waitingForResponse[activeConversationId] = true
 }
 
 function handleSendMessage() {
@@ -168,7 +170,6 @@ function handleSendMessage() {
         }
     }
     sendMessageWrapper()
-    waitingForResponse[activeConversationId] = true
     selectors.userInput.value = ''
 }
 
@@ -320,6 +321,24 @@ selectors.models.addEventListener('change', () => {
     setModel(selectors.models.selectedIndex)
 })
 
+selectors.stopGenerating.addEventListener('click', () => {
+    stopGenerating(activeConversationId)
+})
+
+selectors.regenerateResponse.addEventListener('click', async() => {
+    if(!await promptConfirm('Are you sure you want to regenerate the response?')) {
+        return
+    }
+
+    if(messages[activeConversationId][messages[activeConversationId].length - 1].role === 'assistant' || messages[activeConversationId][messages[activeConversationId].length - 1].role === 'error') {
+        messages[activeConversationId].pop()
+        selectors.messages.removeChild(selectors.messages.lastChild)
+        saveToLocalStorage()
+    }
+
+    sendMessageWrapper()
+})
+
 selectors.sendUserInput.addEventListener('click', handleSendMessage)
 
 selectors.userInput.addEventListener('keydown', (event) => {
@@ -344,25 +363,19 @@ selectors.clearChat.addEventListener('click', async() => {
     saveToLocalStorage()
 })
 
-selectors.regenerateResponse.addEventListener('click', async() => {
-    if(waitingForResponse[activeConversationId]) {
-        showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
-        return
+setInterval(() => {
+    if(messages[activeConversationId].length === 1) {
+        selectors.regenerateResponse.style.display = 'none'
+    } else {
+        if(waitingForResponse[activeConversationId]) {
+            selectors.stopGenerating.style.display = 'flex'
+            selectors.regenerateResponse.style.display = 'none'
+        } else {
+            selectors.stopGenerating.style.display = 'none'
+            selectors.regenerateResponse.style.display = 'flex'
+        }
     }
-
-    if(!await promptConfirm('Are you sure you want to regenerate the response?')) {
-        return
-    }
-
-    if(messages[activeConversationId][messages[activeConversationId].length - 1].role === 'assistant' || messages[activeConversationId][messages[activeConversationId].length - 1].role === 'error') {
-        messages[activeConversationId].pop()
-        selectors.messages.removeChild(selectors.messages.lastChild)
-        saveToLocalStorage()
-    }
-
-    sendMessageWrapper()
-    waitingForResponse[activeConversationId] = true
-})
+}, 100)
 
 // init
 

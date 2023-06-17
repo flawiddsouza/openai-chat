@@ -122,9 +122,30 @@ p {
     padding: 0 30%;
 }
 
-#user-input-container {
+#messages {
+    padding-bottom: 2.5rem;
+}
+
+#action-buttons {
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+#action-buttons > button {
+    position: absolute;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+}
+
+#user-input-container-container {
     margin-top: 1rem;
     margin-bottom: 2rem;
+}
+
+#user-input-container {
     display: grid;
     grid-template-columns: 1fr auto;
     border: 1px solid darkgrey;

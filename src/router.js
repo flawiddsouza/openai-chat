@@ -33,10 +33,15 @@ router.get('/sse', (req, res) => {
     })
 })
 
+const abortControllers = {}
+
 router.post('/message', async(req, res) => {
     const { conversationId, model, messages } = req.body
 
+    abortControllers[conversationId] = new AbortController()
+
     getCompletion(
+        abortControllers[conversationId],
         model,
         messages,
         data => {
@@ -51,6 +56,13 @@ router.post('/message', async(req, res) => {
     ).then(() => {})
 
     res.send({ message: 'Completion initiated' })
+})
+
+router.post('/stop', async(req, res) => {
+    const { conversationId } = req.body
+    abortControllers[conversationId].abort()
+    req.app.emit('message-end', { conversationId, success: 'Completion stopped' })
+    res.send({ message: 'Completion stopped' })
 })
 
 export default router

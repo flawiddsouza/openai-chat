@@ -1,4 +1,5 @@
 import { fetchEventSource } from 'fetch-event-source-hperrin'
+import process from 'node:process'
 
 export async function getModels() {
     const response = await fetch('https://api.openai.com/v1/models', {
@@ -17,9 +18,7 @@ export async function getModels() {
 class RetriableError extends Error {}
 class FatalError extends Error {}
 
-export async function getCompletion(model, messages, onMessage, onMessageEnd) {
-    const ctrl = new AbortController()
-
+export async function getCompletion(abortController, model, messages, onMessage, onMessageEnd) {
     console.log(model, messages)
 
     await fetchEventSource('https://api.openai.com/v1/chat/completions', {
@@ -34,7 +33,7 @@ export async function getCompletion(model, messages, onMessage, onMessageEnd) {
             temperature: 1,
             stream: true,
         }),
-        signal: ctrl.signal,
+        signal: abortController.signal,
         async onopen(response) {
             const EventStreamContentType = 'text/event-stream'
 
@@ -50,7 +49,7 @@ export async function getCompletion(model, messages, onMessage, onMessageEnd) {
                     errorMessage = await response.text()
                 }
 
-                ctrl.abort()
+                abortController.abort()
                 onMessageEnd({ error: errorMessage })
 
                 throw new FatalError()
@@ -66,7 +65,7 @@ export async function getCompletion(model, messages, onMessage, onMessageEnd) {
                 }
 
                 if(choice.finish_reason !== null) {
-                    ctrl.abort()
+                    abortController.abort()
                     onMessageEnd({ success: 'Chat completed' })
                     return
                 }
