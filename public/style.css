@@ -92,6 +92,10 @@ p {
     overflow: auto;
 }
 
+#messages > .user, #messages > .assistant {
+    line-height: 1.2;
+}
+
 #messages > .user {
     white-space: pre-wrap;
 }
@@ -248,4 +252,15 @@ p {
     #messages {
         padding-bottom: 2.5rem;
     }
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    opacity: 1;
+    animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite;
 }

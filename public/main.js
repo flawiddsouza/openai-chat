@@ -126,6 +126,8 @@ function renderMessages() {
     selectors.messages.scrollTop = selectors.messages.scrollHeight
 }
 
+const blinkingCursor = '<span class="cursor animate-pulse">▍</span>'
+
 function addMessage(conversationId, message, type) {
     if(type === 'assistant') {
         if(newMessage[conversationId]) {
@@ -135,11 +137,13 @@ function addMessage(conversationId, message, type) {
             })
             if(conversationId === activeConversationId) {
                 selectors.messages.innerHTML += `<div class="assistant">${renderMarkdown(message)}</div>`
+                selectors.messages.lastChild.lastElementChild.innerHTML += blinkingCursor
             }
         } else {
             messages[conversationId][messages[conversationId].length - 1].content += message
             if(conversationId === activeConversationId) {
                 selectors.messages.lastChild.innerHTML = renderMarkdown(messages[conversationId][messages[conversationId].length - 1].content)
+                selectors.messages.lastChild.lastElementChild.innerHTML += blinkingCursor
             }
         }
     }
@@ -296,14 +300,21 @@ es.addEventListener('message', (event) => {
 
 es.addEventListener('message-end', (event) => {
     const payload = JSON.parse(event.data)
+
     if(payload.conversationId in messages === false) {
         return
     }
+
     if(payload.error) {
         addMessage(payload.conversationId, payload.error, 'error')
     }
+
     newMessage[payload.conversationId] = true
     waitingForResponse[payload.conversationId] = false
+
+    if(payload.conversationId === activeConversationId) {
+        selectors.messages.lastChild.querySelector('.cursor').remove()
+    }
 })
 
 es.addEventListener('error', (event) => {
