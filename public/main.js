@@ -274,12 +274,18 @@ const es = new EventSource('/sse')
 
 es.addEventListener('message', (event) => {
     const payload = JSON.parse(event.data)
+    if(payload.conversationId in messages === false) {
+        return
+    }
     addMessage(payload.conversationId, payload.message, 'assistant')
     newMessage[payload.conversationId] = false
 })
 
 es.addEventListener('message-end', (event) => {
     const payload = JSON.parse(event.data)
+    if(payload.conversationId in messages === false) {
+        return
+    }
     if(payload.error) {
         addMessage(payload.conversationId, payload.error, 'error')
     }
