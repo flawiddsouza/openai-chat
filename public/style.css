@@ -92,11 +92,27 @@ p {
     overflow: auto;
 }
 
-#messages > .user, #messages > .assistant {
+#messages > .message > .user, #messages > .assistant {
     line-height: 1.2;
 }
 
-#messages > .user {
+#messages > .message {
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
+
+#messages > .message > .actions > button {
+    visibility: hidden;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+#messages > .message:hover > .actions > button {
+    visibility: visible;
+}
+
+#messages > .message > .user {
     white-space: pre-wrap;
 }
 

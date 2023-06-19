@@ -115,13 +115,21 @@ function renderMessages() {
 
     selectors.messages.innerHTML = ''
 
-    messages[activeConversationId].forEach(message => {
+    messages[activeConversationId].forEach((message, messageIndex) => {
         if(message.role === 'system') {
             return
         }
         if(message.role === 'user') {
-            selectors.messages.innerHTML += `<div class="user"></div>`
-            selectors.messages.lastChild.textContent = message.content
+            selectors.messages.innerHTML += `
+            <div class="message">
+                <div class="user"></div>
+                <div class="actions">
+                    <button class="delete-message" data-message-index="${messageIndex}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-trash"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>
+                    </button>
+                </div>
+            </div>`
+            selectors.messages.lastChild.querySelector('.user').textContent = message.content
         } else {
             selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
         }
@@ -153,12 +161,21 @@ function addMessage(conversationId, message, type) {
     }
 
     if(type === 'user') {
-        selectors.messages.innerHTML += `<div class="user"></div>`
-        selectors.messages.lastChild.textContent = message
         messages[conversationId].push({
             role: 'user',
             content: message
         })
+        const messageIndex = messages[conversationId].length - 1
+        selectors.messages.innerHTML += `
+        <div class="message">
+            <div class="user"></div>
+            <div class="actions">
+                <button class="delete-message" data-message-index="${messageIndex}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-trash"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>
+                </button>
+            </div>
+        </div>`
+        selectors.messages.lastChild.querySelector('.user').textContent = message
     }
 
     if(type === 'error') {
@@ -415,11 +432,26 @@ selectors.clearChat.addEventListener('click', async() => {
     saveToLocalStorage()
 })
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async(event) => {
     if(event.target.closest('.copy-code')) {
         const code = event.target.closest('.copy-code').parentElement.nextElementSibling.textContent
         navigator.clipboard.writeText(code)
         showAlert('Code copied to clipboard', { backgroundColor: '#28a745' })
+    }
+
+    if(event.target.closest('.delete-message')) {
+        if(waitingForResponse[activeConversationId]) {
+            showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
+            return
+        }
+
+        if(!await promptConfirm('Are you sure you want to delete this message?')) {
+            return
+        }
+        const messageIndex = event.target.closest('.delete-message').dataset.messageIndex
+        messages[activeConversationId].splice(messageIndex, messages[activeConversationId].length - messageIndex)
+        saveToLocalStorage()
+        renderMessages()
     }
 })
 
