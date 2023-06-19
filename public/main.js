@@ -19,8 +19,12 @@ let messages = {
 
 let activeModel = null
 let activeConversationId = 'default'
-const newMessage = {}
-const waitingForResponse = {}
+const newMessage = {
+    'default': true
+}
+const waitingForResponse = {
+    'default': false
+}
 
 // selectors
 
