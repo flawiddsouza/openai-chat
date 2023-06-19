@@ -9,7 +9,7 @@ import { nanoid } from './libs/nanoid.js'
 let conversations = [
     {
         id: 'default',
-        name: 'Conversation 1'
+        name: 'New Conversation'
     }
 ]
 
