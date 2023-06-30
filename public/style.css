@@ -92,7 +92,7 @@ p {
     overflow: auto;
 }
 
-#messages > .message > .user, #messages > .assistant {
+#messages > .system, #messages > .message > .user, #messages > .assistant {
     line-height: 1.2;
 }
 
@@ -110,6 +110,21 @@ p {
 
 #messages > .message:hover > .actions > button {
     visibility: visible;
+}
+
+#messages > .system {
+    color: grey;
+    font-size: 0.8rem;
+}
+
+#messages > .system > textarea {
+    font: inherit;
+    color: inherit;
+    width: 100%;
+    outline: 0;
+    resize: none;
+    border: 0;
+    padding: 0;
 }
 
 #messages > .message > .user {

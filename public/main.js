@@ -3,6 +3,7 @@ import { marked } from './libs/marked.esm.js'
 import hljs from './libs/highlight.js@11.8.0/highlight.min.js'
 import { showAlert, promptConfirm } from './helpers.js'
 import { nanoid } from './libs/nanoid.js'
+import './web-components/autosize.js'
 
 // data
 
@@ -129,11 +130,18 @@ function renderMessages() {
     selectors.messages.innerHTML = ''
 
     messages[activeConversationId].forEach((message, messageIndex) => {
-        if(message.role === 'system') {
-            return
-        }
         if(message.role === 'user') {
             renderUserMessage(messageIndex, message.content)
+        } else if(message.role === 'system') {
+            if(messages[activeConversationId].length === 1) {
+                selectors.messages.innerHTML += `<div class="system"><textarea is="auto-size" spellcheck="false">${message.content}</textarea></div>`
+                selectors.messages.lastChild.querySelector('textarea').addEventListener('input', event => {
+                    messages[activeConversationId][messageIndex].content = event.target.value
+                    saveToLocalStorage()
+                })
+            } else {
+                selectors.messages.innerHTML += `<div class="system">${message.content}</div>`
+            }
         } else {
             selectors.messages.innerHTML += `<div class="${message.role}">${message.role === 'assistant' ? renderMarkdown(message.content) : message.content}</div>`
         }
@@ -145,6 +153,12 @@ function renderMessages() {
 const blinkingCursor = '<span class="cursor animate-pulse">▍</span>'
 
 function addMessage(conversationId, message, type) {
+    // when user sends the first message, remove system prompt textarea
+    // and replace it with content of the textarea
+    if(messages[conversationId].length === 1) {
+        selectors.messages.firstChild.innerHTML = messages[conversationId][0].content
+    }
+
     if(type === 'assistant') {
         if(newMessage[conversationId]) {
             messages[conversationId].push({
@@ -231,6 +245,8 @@ function loadFromLocalStorage() {
         activeModel = data.activeModel
         messages = data.messages
         renderMessages()
+    } else {
+        renderMessages() // without this the system prompt won't be shown the very first time the app is loaded
     }
 }
 
@@ -424,6 +440,7 @@ selectors.clearChat.addEventListener('click', async() => {
 
     messages[activeConversationId] = initMessages()
     selectors.messages.innerHTML = ''
+    renderMessages() // system prompt is not shown otherwise
     saveToLocalStorage()
 })
 
