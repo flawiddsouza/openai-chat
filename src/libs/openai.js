@@ -10,7 +10,7 @@ export async function getModels() {
 
     const responseData = await response.json()
 
-    const models = responseData.data.filter(model => model.id.startsWith('gpt'))
+    const models = responseData.data.filter(model => model.id.startsWith('gpt') && !model.id.match(/-\d{4}$/))
 
     return models
 }
