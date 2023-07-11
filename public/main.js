@@ -250,10 +250,14 @@ function loadFromLocalStorage() {
     }
 }
 
+function escapeHTML(html) {
+    return new Option(html).innerHTML
+}
+
 function renderConversations() {
     selectors.conversations.innerHTML = conversations.slice().reverse().map(conversation => {
         return `<div class="conversation ${conversation.id === activeConversationId ? 'active' : ''}" data-id="${conversation.id}">
-            <div>${conversation.name}</div>
+            <div>${escapeHTML(conversation.name)}</div>
             <div>
                 <button class="rename-conversation">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-pencil"><path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4"></path><path d="M13.5 6.5l4 4"></path></svg>
