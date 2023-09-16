@@ -1,15 +1,15 @@
-export async function getModels() {
-    const response = await fetch('/models')
+export async function getModels(useUrl = 0) {
+    const response = await fetch(`/models?useUrl=${useUrl}`)
     return response.json()
 }
 
-export async function sendMessage(conversationId, model, messages) {
+export async function sendMessage(conversationId, model, messages, useUrl = 0) {
     const response = await fetch('/message', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ conversationId, model, messages }),
+        body: JSON.stringify({ conversationId, model, messages, useUrl }),
     })
     return response.json()
 }

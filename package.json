@@ -3,7 +3,8 @@
     "dependencies": {
         "dotenv": "^16.1.4",
         "express": "^4.18.2",
-        "fetch-event-source-hperrin": "^3.0.0"
+        "fetch-event-source-hperrin": "^3.0.0",
+        "openai": "^4.7.1"
     },
     "devDependencies": {
         "nodemon": "^2.0.22"

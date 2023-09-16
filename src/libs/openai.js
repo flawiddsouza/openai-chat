@@ -1,16 +1,35 @@
 import { fetchEventSource } from 'fetch-event-source-hperrin'
 import process from 'node:process'
+import OpenAI from 'openai'
 
-export async function getModels() {
-    const response = await fetch('https://api.openai.com/v1/models', {
+const OPENAI_API_BASE_URL = [
+    'https://api.openai.com/v1',
+    'https://api.endpoints.anyscale.com/v1'
+]
+
+function getOpenAPIKey(baseUrlIndex=0) {
+    const OPENAI_API_KEY = [
+        process.env.OPENAI_API_KEY,
+        process.env.OPENAI_API_KEY_2
+    ]
+
+    return OPENAI_API_KEY[baseUrlIndex]
+}
+
+export async function getModels(baseUrlIndex=0) {
+    const response = await fetch(`${OPENAI_API_BASE_URL[baseUrlIndex]}/models`, {
         headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+            Authorization: `Bearer ${getOpenAPIKey(baseUrlIndex)}`
         }
     })
 
     const responseData = await response.json()
 
-    const models = responseData.data.filter(model => model.id.startsWith('gpt') && !model.id.match(/-\d{4}$/))
+    const models = responseData.data
+
+    if(baseUrlIndex === 0) {
+        return models.filter(model => model.id.startsWith('gpt') && !model.id.match(/-\d{4}$/))
+    }
 
     return models
 }
@@ -18,14 +37,51 @@ export async function getModels() {
 class RetriableError extends Error {}
 class FatalError extends Error {}
 
-export async function getCompletion(abortController, model, messages, onMessage, onMessageEnd) {
+function handleMessage(msg, onMessage, onMessageEnd, abortController) {
+    let parsedMsg = msg
+    if(typeof msg === 'string') {
+        parsedMsg = JSON.parse(msg)
+    }
+    parsedMsg.choices.forEach(choice => {
+        if(choice.delta.content) {
+            onMessage(choice.delta.content)
+        }
+
+        if(choice.finish_reason !== null) {
+            abortController.abort()
+            onMessageEnd({ success: 'Chat completed' })
+            return
+        }
+    })
+}
+
+export async function getCompletion(abortController, model, messages, onMessage, onMessageEnd, baseUrlIndex=0) {
     console.log(model, messages)
 
-    await fetchEventSource('https://api.openai.com/v1/chat/completions', {
+    if (baseUrlIndex === 1) {
+        const openai = new OpenAI({
+            apiKey: getOpenAPIKey(baseUrlIndex),
+            baseURL: OPENAI_API_BASE_URL[baseUrlIndex]
+        })
+
+        const stream = await openai.chat.completions.create({
+            model,
+            messages,
+            stream: true,
+        })
+
+        for await (const part of stream) {
+            handleMessage(part, onMessage, onMessageEnd, abortController)
+        }
+
+        return
+    }
+
+    await fetchEventSource(`${OPENAI_API_BASE_URL[baseUrlIndex]}/chat/completions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+            Authorization: `Bearer ${getOpenAPIKey(baseUrlIndex)}`
         },
         body: JSON.stringify({
             model,
@@ -58,18 +114,7 @@ export async function getCompletion(abortController, model, messages, onMessage,
             }
         },
         onmessage(msg) {
-            const parsedMsg = JSON.parse(msg.data)
-            parsedMsg.choices.forEach(choice => {
-                if(choice.delta.content) {
-                    onMessage(choice.delta.content)
-                }
-
-                if(choice.finish_reason !== null) {
-                    abortController.abort()
-                    onMessageEnd({ success: 'Chat completed' })
-                    return
-                }
-            })
+            handleMessage(msg.data, onMessage, onMessageEnd, abortController)
         }
     })
 }

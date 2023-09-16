@@ -4,7 +4,11 @@ import { getModels, getCompletion } from './libs/openai.js'
 const router = createRouter()
 
 router.get('/models', async(req, res) => {
-    res.send(await getModels())
+    let { useUrl = 0 } = req.query
+
+    useUrl = parseInt(useUrl)
+
+    res.send(await getModels(useUrl))
 })
 
 router.get('/sse', (req, res) => {
@@ -36,7 +40,7 @@ router.get('/sse', (req, res) => {
 const abortControllers = {}
 
 router.post('/message', async(req, res) => {
-    const { conversationId, model, messages } = req.body
+    const { conversationId, model, messages, useUrl = 0 } = req.body
 
     abortControllers[conversationId] = new AbortController()
 
@@ -52,7 +56,8 @@ router.post('/message', async(req, res) => {
         },
         data => {
             req.app.emit('message-end', { conversationId, ...data })
-        }
+        },
+        useUrl
     ).then(() => {})
 
     res.send({ message: 'Completion initiated' })

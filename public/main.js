@@ -27,6 +27,8 @@ const waitingForResponse = {
     'default': false
 }
 
+let useUrl = 0
+
 // selectors
 
 const selectors = {
@@ -61,13 +63,28 @@ function toggleSidebar() {
 }
 
 async function loadModels() {
-    const models = await getModels()
+    const models = await getModels(useUrl)
     selectors.models.innerHTML = models.map(model => `<option value="${model.id}">${model.id}</option>`).join('')
+
+    let index = -1
+
     if(activeModel) {
-        setModel(models.findIndex(model => model.id === activeModel))
-    } else {
-        setModel(models.findIndex(model => model.id === 'gpt-3.5-turbo'))
+        index = models.findIndex(model => model.id === activeModel)
     }
+
+    if(index === -1) {
+        index = models.findIndex(model => model.id === 'gpt-3.5-turbo')
+    }
+
+    if(index === -1) {
+        index = models.findIndex(model => model.id === 'meta-llama/Llama-2-70b-chat-hf')
+    }
+
+    if(index === -1) {
+        index = 0
+    }
+
+    setModel(index)
 }
 
 function setModel(index) {
@@ -203,7 +220,7 @@ function addMessage(conversationId, message, type) {
 }
 
 function sendMessageWrapper() {
-    sendMessage(activeConversationId, activeModel, messages[activeConversationId].filter(message => message.role !== 'error'))
+    sendMessage(activeConversationId, activeModel, messages[activeConversationId].filter(message => message.role !== 'error'), useUrl)
     waitingForResponse[activeConversationId] = true
 }
 
@@ -319,6 +336,11 @@ function setActiveConversation(id) {
     activeConversationId = id
     renderConversations()
     renderMessages()
+}
+
+function init() {
+    const urlParams = new URLSearchParams(document.location.search)
+    useUrl = parseInt(urlParams.get('use_url')) || 0
 }
 
 // event handlers
@@ -487,6 +509,7 @@ setInterval(() => {
 
 // init
 
+init()
 loadFromLocalStorage()
 loadModels()
 renderConversations()
