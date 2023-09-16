@@ -70,6 +70,10 @@ export async function getCompletion(abortController, model, messages, onMessage,
             stream: true,
         })
 
+        abortController.signal.addEventListener('abort', () => {
+            stream.controller.abort()
+        })
+
         for await (const part of stream) {
             handleMessage(part, onMessage, onMessageEnd, abortController)
         }
