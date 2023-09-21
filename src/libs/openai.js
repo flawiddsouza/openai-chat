@@ -42,6 +42,13 @@ function handleMessage(msg, onMessage, onMessageEnd, abortController) {
     if(typeof msg === 'string') {
         parsedMsg = JSON.parse(msg)
     }
+
+    if (parsedMsg.error) {
+        abortController.abort()
+        onMessageEnd({ error: parsedMsg.error.message })
+        return
+    }
+
     parsedMsg.choices.forEach(choice => {
         if(choice.delta.content) {
             onMessage(choice.delta.content)
