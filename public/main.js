@@ -122,20 +122,49 @@ function renderMarkdown(markdown) {
     })
 }
 
-function renderUserMessage(messageIndex, message) {
-    selectors.messages.innerHTML += `
-    <div class="message">
-        <div class="user"></div>
-        <div class="actions">
-            <button class="delete-message" data-message-index="${messageIndex}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-trash"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>
-            </button>
-        </div>
-    </div>`
-    selectors.messages.lastChild.querySelector('.user').textContent = message
+function renderUserMessage(messageIndex, message, edit = false) {
+    if(!edit) {
+        selectors.messages.innerHTML += `
+        <div class="message">
+            <div class="user"></div>
+            <div class="actions">
+                <button class="edit-message" data-message-index="${messageIndex}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                        <path d="M16 5l3 3" />
+                    </svg>
+                </button>
+                <button class="delete-message" data-message-index="${messageIndex}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-trash"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>
+                </button>
+            </div>
+        </div>`
+        selectors.messages.lastChild.querySelector('.user').textContent = message
+    } else {
+        selectors.messages.innerHTML += `
+        <div class="message">
+            <textarea is="auto-size" spellcheck="false" class="user" style="border: 0; outline: 0; padding: 0;" class="edit-message" data-message-index="${messageIndex}">${message}</textarea>
+            <div class="actions">
+                <button class="cancel-edit-message" data-message-index="${messageIndex}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit-off" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                    <path d="M10.507 10.498l-1.507 1.502v3h3l1.493 -1.498m2 -2.01l4.89 -4.907a2.1 2.1 0 0 0 -2.97 -2.97l-4.913 4.896" />
+                    <path d="M16 5l3 3" />
+                    <path d="M3 3l18 18" />
+                </svg>
+                </button>
+                <button class="delete-message" data-message-index="${messageIndex}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-trash"><path d="M4 7l16 0"></path><path d="M10 11l0 6"></path><path d="M14 11l0 6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>
+                </button>
+            </div>
+        </div>`
+    }
 }
 
-function renderMessages() {
+function renderMessages(scrollToBottom = true) {
     if(activeConversationId in newMessage === false) {
         newMessage[activeConversationId] = true
     }
@@ -148,7 +177,7 @@ function renderMessages() {
 
     messages[activeConversationId].forEach((message, messageIndex) => {
         if(message.role === 'user') {
-            renderUserMessage(messageIndex, message.content)
+            renderUserMessage(messageIndex, message.content, message.edit)
         } else if(message.role === 'system') {
             if(messages[activeConversationId].length === 1) {
                 selectors.messages.innerHTML += `<div class="system"><textarea is="auto-size" spellcheck="false">${message.content}</textarea></div>`
@@ -164,7 +193,9 @@ function renderMessages() {
         }
     })
 
-    selectors.messages.scrollTop = selectors.messages.scrollHeight
+    if(scrollToBottom) {
+        selectors.messages.scrollTop = selectors.messages.scrollHeight
+    }
 }
 
 const blinkingCursor = '<span class="cursor animate-pulse">▍</span>'
@@ -220,7 +251,14 @@ function addMessage(conversationId, message, type) {
 }
 
 function sendMessageWrapper() {
-    sendMessage(activeConversationId, activeModel, messages[activeConversationId].filter(message => message.role !== 'error'), useUrl)
+    const messagesToSend = messages[activeConversationId].filter(message => message.role !== 'error').map(messsage => {
+        return {
+            role: messsage.role,
+            content: messsage.content
+        }
+    })
+
+    sendMessage(activeConversationId, activeModel, messagesToSend, useUrl)
     waitingForResponse[activeConversationId] = true
 }
 
@@ -477,6 +515,21 @@ document.addEventListener('click', async(event) => {
         showAlert('Code copied to clipboard', { backgroundColor: '#28a745' })
     }
 
+    if(event.target.closest('.edit-message')) {
+        if(waitingForResponse[activeConversationId]) {
+            showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
+            return
+        }
+
+        messages[activeConversationId][event.target.closest('.edit-message').dataset.messageIndex].edit = true
+        renderMessages(false)
+    }
+
+    if(event.target.closest('.cancel-edit-message')) {
+        messages[activeConversationId][event.target.closest('.cancel-edit-message').dataset.messageIndex].edit = false
+        renderMessages(false)
+    }
+
     if(event.target.closest('.delete-message')) {
         if(waitingForResponse[activeConversationId]) {
             showAlert('Please wait for the response to finish generating.', { backgroundColor: 'darkblue' })
@@ -490,6 +543,14 @@ document.addEventListener('click', async(event) => {
         messages[activeConversationId].splice(messageIndex, messages[activeConversationId].length - messageIndex)
         saveToLocalStorage()
         renderMessages()
+    }
+})
+
+document.addEventListener('input', (event) => {
+    if(event.target.closest('textarea.user')) {
+        const messageIndex = event.target.closest('textarea.user').dataset.messageIndex
+        messages[activeConversationId][messageIndex].content = event.target.value
+        saveToLocalStorage()
     }
 })
 
