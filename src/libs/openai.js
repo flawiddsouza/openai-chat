@@ -28,7 +28,7 @@ export async function getModels(baseUrlIndex=0) {
     const models = responseData.data
 
     if(baseUrlIndex === 0) {
-        return models.filter(model => model.id.startsWith('gpt') && !model.id.match(/-\d{4}$/))
+        return models.filter(model => model.id.startsWith('gpt') && !model.id.match(/-\d{4}$/) && !model.id.includes('-instruct'))
     }
 
     return models
