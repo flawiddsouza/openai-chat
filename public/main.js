@@ -1,4 +1,4 @@
-import { getModels, sendMessage, stopGenerating } from './api.js'
+import { getModels, getPrompts, sendMessage, stopGenerating } from './api.js'
 import { marked } from './libs/marked.esm.js'
 import hljs from './libs/highlight.js@11.8.0/highlight.min.js'
 import { showAlert, promptConfirm } from './helpers.js'
@@ -6,6 +6,8 @@ import { nanoid } from './libs/nanoid.js'
 import './web-components/autosize.js'
 
 // data
+
+let activePrompt = null
 
 let conversations = [
     {
@@ -29,6 +31,8 @@ const waitingForResponse = {
 
 let useUrl = 0
 
+let prompts = []
+
 // selectors
 
 const selectors = {
@@ -38,6 +42,7 @@ const selectors = {
     addConversation: document.querySelector('#add-conversation'),
     conversations: document.querySelector('#conversations'),
     models: document.querySelector('#models'),
+    prompts: document.querySelector('#prompts'),
     messages: document.querySelector('#messages'),
     stopGenerating: document.querySelector('#stop-generating'),
     regenerateResponse: document.querySelector('#regenerate-response'),
@@ -49,10 +54,21 @@ const selectors = {
 // methods
 
 function initMessages() {
+    let content = `You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown.`
+
+    if(activePrompt && activePrompt.name !== 'Custom') {
+        content = activePrompt.prompt
+    }
+
+    // if custom prompt is set, reset selector to 0, which is Default
+    if(activePrompt && activePrompt.name === 'Custom') {
+        selectors.prompts.selectedIndex = 0
+    }
+
     return [
         {
             role: 'system',
-            content: `You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown.`
+            content
         }
     ]
 }
@@ -87,10 +103,34 @@ async function loadModels() {
     setModel(index)
 }
 
+function renderPrompts() {
+    selectors.prompts.innerHTML = prompts.map(prompt => `<option value="${prompt.name}" ${prompt.name === 'Custom' ? 'disabled' : ''}>${prompt.name}</option>`).join('')
+    const activePromptContent = messages[activeConversationId][0].content
+    activePrompt = prompts.find(prompt => prompt.prompt === activePromptContent)
+    if(!activePrompt) {
+        activePrompt = prompts.find(prompt => prompt.name === 'Custom')
+    }
+    const index = prompts.findIndex(prompt => prompt.name === activePrompt.name)
+    selectors.prompts.selectedIndex = index
+}
+
+async function loadPrompts() {
+    prompts = await getPrompts()
+    renderPrompts()
+}
+
 function setModel(index) {
     selectors.models.selectedIndex = index
     activeModel = selectors.models.options[index].value
     saveToLocalStorage()
+}
+
+function setPrompt(index) {
+    const selectedPromptName = selectors.prompts.options[index].value
+    const selectedPrompt = prompts.find(prompt => prompt.name === selectedPromptName).prompt
+    messages[activeConversationId][0].content = selectedPrompt
+    saveToLocalStorage()
+    renderMessages(false)
 }
 
 class CustomRenderer extends marked.Renderer {
@@ -183,6 +223,7 @@ function renderMessages(scrollToBottom = true) {
                 selectors.messages.innerHTML += `<div class="system"><textarea is="auto-size" spellcheck="false">${message.content}</textarea></div>`
                 selectors.messages.lastChild.querySelector('textarea').addEventListener('input', event => {
                     messages[activeConversationId][messageIndex].content = event.target.value
+                    renderPrompts() // refresh prompts when system prompt changes
                     saveToLocalStorage()
                 })
             } else {
@@ -196,6 +237,8 @@ function renderMessages(scrollToBottom = true) {
     if(scrollToBottom) {
         selectors.messages.scrollTop = selectors.messages.scrollHeight
     }
+
+    renderPrompts()
 }
 
 const blinkingCursor = '<span class="cursor animate-pulse">▍</span>'
@@ -465,6 +508,10 @@ selectors.models.addEventListener('change', () => {
     setModel(selectors.models.selectedIndex)
 })
 
+selectors.prompts.addEventListener('change', () => {
+    setPrompt(selectors.prompts.selectedIndex)
+})
+
 selectors.stopGenerating.addEventListener('click', () => {
     stopGenerating(activeConversationId)
 })
@@ -573,4 +620,5 @@ setInterval(() => {
 init()
 loadFromLocalStorage()
 loadModels()
+loadPrompts()
 renderConversations()

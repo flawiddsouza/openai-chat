@@ -11,6 +11,23 @@ router.get('/models', async(req, res) => {
     res.send(await getModels(useUrl))
 })
 
+router.get('/prompts', async(req, res) => {
+    res.send([
+        {
+            name: 'Default',
+            prompt: `You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown.`
+        },
+        {
+            name: 'C# Class from JSON',
+            prompt: `Create C# class for given JSON. Be concise and provide only the code.`
+        },
+        {
+            name: 'Custom',
+            prompt: null
+        },
+    ])
+})
+
 router.get('/sse', (req, res) => {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',

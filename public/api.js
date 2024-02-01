@@ -3,6 +3,11 @@ export async function getModels(useUrl = 0) {
     return response.json()
 }
 
+export async function getPrompts() {
+    const response = await fetch('/prompts')
+    return response.json()
+}
+
 export async function sendMessage(conversationId, model, messages, useUrl = 0) {
     const response = await fetch('/message', {
         method: 'POST',

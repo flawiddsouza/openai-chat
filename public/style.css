@@ -84,7 +84,7 @@ p {
     margin-bottom: 1rem;
 }
 
-#models {
+#models, #prompts {
     width: 10rem;
 }
 
