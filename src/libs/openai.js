@@ -1,4 +1,3 @@
-import { fetchEventSource } from 'fetch-event-source-hperrin'
 import process from 'node:process'
 import OpenAI from 'openai'
 
@@ -65,67 +64,31 @@ function handleMessage(msg, onMessage, onMessageEnd, abortController) {
 export async function getCompletion(abortController, model, messages, onMessage, onMessageEnd, baseUrlIndex=0) {
     console.log(model, messages)
 
-    if (baseUrlIndex === 1) {
-        const openai = new OpenAI({
-            apiKey: getOpenAPIKey(baseUrlIndex),
-            baseURL: OPENAI_API_BASE_URL[baseUrlIndex]
-        })
+    const openai = new OpenAI({
+        apiKey: getOpenAPIKey(baseUrlIndex),
+        baseURL: OPENAI_API_BASE_URL[baseUrlIndex]
+    })
 
-        const stream = await openai.chat.completions.create({
-            model,
-            messages,
-            stream: true,
-        })
+    const stream = openai.beta.chat.completions.stream({
+        model,
+        messages,
+        temperature: 1,
+        stream: true,
+    })
 
-        abortController.signal.addEventListener('abort', () => {
-            stream.controller.abort()
-        })
+    stream.on('abort', e => console.log(e))
 
-        for await (const part of stream) {
-            handleMessage(part, onMessage, onMessageEnd, abortController)
-        }
+    abortController.signal.addEventListener('abort', () => {
+        stream.controller.abort()
+    })
 
-        return
+    for await (const part of stream) {
+        handleMessage(part, onMessage, onMessageEnd, abortController)
     }
 
-    await fetchEventSource(`${OPENAI_API_BASE_URL[baseUrlIndex]}/chat/completions`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${getOpenAPIKey(baseUrlIndex)}`
-        },
-        body: JSON.stringify({
-            model,
-            messages,
-            temperature: 1,
-            stream: true,
-        }),
-        signal: abortController.signal,
-        async onopen(response) {
-            const EventStreamContentType = 'text/event-stream'
-
-            if(response.ok && response.headers.get('content-type') === EventStreamContentType) {
-                return // everything's good
-            } else if(response.status >= 400 && response.status < 500 && response.status !== 429) {
-                let errorMessage = 'Unknown error'
-
-                if(response.headers.get('content-type') === 'application/json') {
-                    const responseBody = await response.json()
-                    errorMessage = responseBody.error.message
-                } else {
-                    errorMessage = await response.text()
-                }
-
-                abortController.abort()
-                onMessageEnd({ error: errorMessage })
-
-                throw new FatalError()
-            } else {
-                throw new RetriableError()
-            }
-        },
-        onmessage(msg) {
-            handleMessage(msg.data, onMessage, onMessageEnd, abortController)
-        }
-    })
+    try {
+        await stream.finalContent()
+    } catch (error) {
+        console.log(error)
+    }
 }
