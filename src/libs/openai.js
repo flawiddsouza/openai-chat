@@ -54,7 +54,6 @@ function handleMessage(msg, onMessage, onMessageEnd, abortController) {
         }
 
         if(choice.finish_reason !== null) {
-            abortController.abort()
             onMessageEnd({ success: 'Chat completed' })
             return
         }
@@ -82,11 +81,11 @@ export async function getCompletion(abortController, model, messages, onMessage,
         stream.controller.abort()
     })
 
-    for await (const part of stream) {
-        handleMessage(part, onMessage, onMessageEnd, abortController)
-    }
-
     try {
+        for await (const part of stream) {
+            handleMessage(part, onMessage, onMessageEnd, abortController)
+        }
+
         await stream.finalContent()
     } catch (error) {
         console.log(error)
