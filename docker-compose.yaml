@@ -1,0 +1,17 @@
+networks:
+  net:
+    name: net
+    driver: bridge
+
+services:
+  chat:
+    image: flawiddsouza/openai-chat:latest
+    container_name: gpt-ui
+    restart: unless-stopped
+    networks:
+      - net
+    ports:
+      - 8080:80
+    environment:
+      PORT: 80
+      OPENAI_API_KEY: sk-proj-iy
