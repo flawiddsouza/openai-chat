@@ -10,6 +10,8 @@
     },
     "scripts": {
         "start": "node src/main.js",
-        "dev": "nodemon src/main.js"
+        "dev": "nodemon src/main.js",
+        "docker-build": "docker build --no-cache -t  flawiddsouza/openai-chat:latest .",
+        "docker-push": "docker push flawiddsouza/openai-chat:latest"
     }
 }
