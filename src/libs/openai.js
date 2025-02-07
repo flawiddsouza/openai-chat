@@ -65,6 +65,10 @@ function handleMessage(msg, onMessage, onMessageEnd, abortController) {
 export async function getCompletion(abortController, model, messages, onMessage, onMessageEnd, baseUrlIndex=0) {
     console.log(model, messages)
 
+    if (model.startsWith('o1')) {
+        messages[0].role = 'assistant'
+    }
+
     const openai = new OpenAI({
         apiKey: getOpenAPIKey(baseUrlIndex),
         baseURL: OPENAI_API_BASE_URL[baseUrlIndex]
@@ -78,6 +82,11 @@ export async function getCompletion(abortController, model, messages, onMessage,
     })
 
     stream.on('abort', e => console.log(e))
+
+    stream.on('error', e => {
+        onMessage('```\n' + JSON.stringify(e, null, 4) + '\n```')
+        onMessageEnd({ success: 'Chat completed' })
+    })
 
     abortController.signal.addEventListener('abort', () => {
         stream.controller.abort()
